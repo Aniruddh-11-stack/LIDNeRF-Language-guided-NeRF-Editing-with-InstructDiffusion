@@ -1,47 +1,121 @@
-### Synopsis of the Project
+# InstructDiffusion: A Generalist Modeling Interface for Vision Tasks
 
-#### Title:
-LIDNeRF: Language guided NeRF Editing with InstructDiffusion
+<p align="center">
+  <a href="https://gengzigang.github.io/instructdiffusion.github.io/">Project Page</a> |
+  <a href="https://arxiv.org/pdf/2309.03895.pdf">Arxiv</a> |
+  <a href="https://98cfca87ef8aed4a6b.gradio.live">Web Demo</a> |
+  <a href="#QuickStart">QuickStart</a> |
+  <a href="#Training">Training</a> |
+  <a href="#Acknowledge">Acknowledge</a> |
+  <a href='#Citation'>Citation</a> 
+</p>
 
-#### Authors:
-Khushal Sharma, Manan Shah, Aniruddh Kulkarni
+<div align="center">
+  <img src="figure/teaser.png" width="1000"/>
+</div>
 
-#### Institution:
-Mukesh Patel School of Technology, Management & Engineering, SVKM’s Narsee Monjee Institute of Management Studies
+This is the pytorch implementation of InstructDiffusion, a unifying and generic framework for aligning computer vision tasks with human instructions. Our code is based on the [Instruct-pix2pix](https://github.com/timothybrooks/instruct-pix2pix) and [CompVis/stable_diffusion](https://github.com/CompVis/stable-diffusion).<br>
 
-#### Abstract:
-The project introduces a novel method for instruction-based image editing by leveraging the combined capabilities of InstructDiffusion and Lang-SAM models. This approach allows for precise and context-aware modifications to real-world images based on natural language instructions. The core methodology involves an iterative process where images rendered from NeRF (Neural Radiance Fields) scenes are updated using diffusion models and then used to supervise the reconstruction of these scenes. This iterative process enables targeted edits such as object addition, removal, and replacement, while optimizing the underlying 3D scene. The effectiveness of the method is demonstrated through various qualitative results, showcasing its versatility and ability to perform complex image edits compared to previous techniques.
+## QuickStart
+Follow the steps below to quickly edit your own images. The inference code in our repository requires **one GPU with > 9GB memory** to test images with a resolution of **512**.
 
-#### Key Sections:
+1. Clone this repo.
+2. Setup conda environment:
+   ```
+   conda env create -f environment.yaml
+   conda activate instructdiff
+   ```
+3. We provide a well-trained [checkpoint](https://mailustceducn-my.sharepoint.com/:u:/g/personal/aa397601_mail_ustc_edu_cn/EZmXduulFidIhJD73SGcbOoBNpm18CJmU4PgPTS21RM2Ow?e=KqQYpO) and a [checkpoint](https://mailustceducn-my.sharepoint.com/:u:/g/personal/aa397601_mail_ustc_edu_cn/EWlNmyeS9P1BkRg_IlXbPbwBeNMQXQTcIA0pCokyd61UWg?e=iKfRdk) that has undergone human-alignment. Feel free to download to the folder `checkpoints` and try both of them. Or you can download pre-trained models through `bash scripts/download_pretrained_instructdiffusion.sh`.
 
-1. **Introduction:**
-   - **NeRF Overview:** NeRF (Neural Radiance Fields) is a method for representing 3D scenes using neural networks. NeRF editing involves making changes to these 3D scenes.
-   - **Significance and Need:** The ability to edit 3D scenes using natural language instructions is significant for various applications in artificial intelligence and computer vision.
+4. You can edit your own images:
+```bash
+python edit_cli.py --input example.jpg --edit "Transform it to van Gogh, starry night style."
 
-2. **Literature Survey:**
-   - Reviews recent works related to NeRF and text-driven 3D scene editing.
-   - Key papers include Instruct-NeRF2NeRF, Free-Editor, LatentEditor, and Blending-NeRF.
+# Optionally, you can customize the parameters by using the following syntax: 
+# --resolution 512 --steps 50 --config configs/instruct_diffusion.yaml --ckpt YOUR_CHECKPOINT --cfg-text 3.5 --cfg-image 1.25
 
-3. **Preliminaries:**
-   - Discusses the foundational concepts of diffusion models and the necessary software/hardware requirements for the project.
+# We also support loading image from the website and edit, e.g., you could run the command like this:
+python edit_cli.py --input "https://wallup.net/wp-content/uploads/2016/01/207131-animals-nature-lion.jpg" \
+   --edit "Transform it to van Gogh, starry night style." \
+   --resolution 512 --steps 50 \
+   --config configs/instruct_diffusion.yaml \
+   --ckpt checkpoints/v1-5-pruned-emaonly-adaption-task-humanalign.ckpt \
+   --outdir logs/
+```
+For other different tasks, we provide recommended parameter settings, which can be found in [`scripts/inference_example.sh`](./scripts/inference_example.sh).
 
-4. **Methodology:**
-   - **Training NeRF Scene:** Utilizing the nerfacto model to train NeRF scenes.
-   - **Editing with Diffusion Model:** Applying diffusion models for editing.
-   - **Mask Building Extractor:** Creating masks for specific parts of the image to facilitate targeted edits.
-   - **Iterative Refinement:** Ensuring consistency in the edited scenes through an iterative process.
+5. (Optional) You can launch your own interactive editing Gradio app:
+```bash
+python edit_app.py 
 
-5. **Experimental Analysis:**
-   - **Qualitative Evaluation:** Demonstrates the method's effectiveness through various examples of image edits.
-   - **Quantitative Results:** Provides data on the performance and accuracy of the proposed method.
-   - **Limitations:** Discusses the constraints and areas for future improvement.
+# You can also specify the path to the checkpoint
+# The default checkpoint is checkpoints/v1-5-pruned-emaonly-adaption-task-humanalign.ckpt
+python edit_app.py --ckpt checkpoints/v1-5-pruned-emaonly-adaption-task-humanalign.ckpt
+```
 
-6. **Conclusion:**
-   - Summarizes the findings and emphasizes the potential impact and future applications of the method.
+## Training
+The code is developed using python 3.8 on Ubuntu 18.04. The code is developed and tested using 48 NVIDIA V100 GPU cards, each with 32GB of memory. Other platforms are not fully tested.
 
-#### Conclusion:
-The project presents a significant advancement in the field of image editing by integrating NeRF with modern diffusion models and language-based instructions. This innovative approach opens new avenues for precise and context-aware 3D scene editing, demonstrating potential for a wide range of applications in AI and computer vision.
+### Installation
+1. Clone this repo.
+2. Setup conda environment:
+   ```
+   conda env create -f environment.yaml
+   conda activate instructdiff
+   ```
 
----
+### Pre-trained Model Preparation
+You can use the following command to download the official pre-trained stable diffusion model, or you can download the model trained by our pretraining adaptation process from [OneDrive](https://mailustceducn-my.sharepoint.com/:u:/g/personal/aa397601_mail_ustc_edu_cn/EXJSMIpFev5Nj0kuKI88U1IBZDSjegp3G8ukku0OxRRjFQ?e=QhnnB4) and put it into the following folder: stable_diffusion/models/ldm/stable-diffusion-v1/.
+   ```
+   bash scripts/download_pretrained_sd.sh
+   ```
 
-This synopsis covers the essential elements and findings of the project "LIDNeRF: Language guided NeRF Editing with InstructDiffusion".
+### Data Preparation
+You can refer to the [dataset](https://github.com/cientgu/InstructDiffusion/tree/main/dataset) to prepare your data.
+
+### Training Command
+For multi-GPU training on a single machine, you can use the following command:
+   ```
+   python -m torch.distributed.launch --nproc_per_node=8 main.py --name v0 --base configs/instruct_diffusion.yaml --train --logdir logs/instruct_diffusion
+   ```
+
+For multi-GPU training on multiple machines, you can use the following command (assuming 6 machines as an example):
+   ```
+   bash run_multinode.sh instruct_diffusion v0 6
+   ```
+
+### Convert EMA-Model
+You can get the final EMA checkpoint for inference using the command below:
+   ```
+   python convert_ckpt.py --ema-ckpt logs/instruct_diffusion/checkpoint/ckpt_epoch_200/state.pth --out-ckpt checkpoints/v1-5-pruned-emaonly-adaption-task.ckpt
+   ```
+
+## Acknowledge
+
+Thanks to 
+- [Stable-diffusion](https://github.com/CompVis/stable-diffusion)
+- [Instruct-pix2pix](https://github.com/timothybrooks/instruct-pix2pix)
+
+## Citation
+
+```
+@article{Geng23instructdiff,
+  author       = {Zigang Geng and
+                  Binxin Yang and
+                  Tiankai Hang and
+                  Chen Li and
+                  Shuyang Gu and
+                  Ting Zhang and
+                  Jianmin Bao and
+                  Zheng Zhang and
+                  Han Hu and
+                  Dong Chen and
+                  Baining Guo},
+  title        = {InstructDiffusion: {A} Generalist Modeling Interface for Vision Tasks},
+  journal      = {CoRR},
+  volume       = {abs/2309.03895},
+  year         = {2023},
+  url          = {https://doi.org/10.48550/arXiv.2309.03895},
+  doi          = {10.48550/arXiv.2309.03895},
+}
+```
